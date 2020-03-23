@@ -5,6 +5,7 @@ import torch.nn as nn
 import sys
 from torch.autograd import Variable
 import math
+from os import walk
 
 def flip(x, dim):
     xsize = x.size()
@@ -126,6 +127,7 @@ class SincConv_fast(nn.Module):
         features : `torch.Tensor` (batch_size, out_channels, n_samples_out)
             Batch of sinc filters activations.
         """
+        waveforms = waveforms.float()   # [fix] to prevent double-float type error
 
         self.n_ = self.n_.to(waveforms.device)
 
@@ -263,6 +265,9 @@ class SincWrapper(nn.Module):
         
         self.DNN = MLP(DNN1_options, CNN_options)
         self.DNN.cuda()
+        self.DNN.eval()
+        if(DNN1_options['pretrained']):
+            self.DNN.load_state_dict(DNN1_options['model_params'])
 
         self.input_dim=int(DNN2_options['input_dim'])
         self.fc_lay=DNN2_options['fc_lay']
@@ -369,6 +374,10 @@ class MLP(nn.Module):
         
         self.CNN = SincNet(CNN_options)
         self.CNN.cuda()
+        self.CNN.eval()
+        if(CNN_options['pretrained']):
+            self.CNN.load_state_dict(CNN_options['model_params'])
+
         self.input_dim=self.CNN.out_dim    # changed from DNN_options['input_dim'] to cnn output dim
         self.fc_lay=DNN_options['fc_lay']
         self.fc_drop=DNN_options['fc_drop']
@@ -535,7 +544,7 @@ class SincNet(nn.Module):
 
     def forward(self, x):
        batch=x.shape[0]
-       seq_len=x.shape[1]
+       seq_len=x.shape[1] 
        
        if bool(self.cnn_use_laynorm_inp):
         x=self.ln0((x))
