@@ -265,9 +265,12 @@ class SincWrapper(nn.Module):
         
         self.DNN = MLP(DNN1_options, CNN_options)
         self.DNN.cuda()
-        self.DNN.eval()
+
         if(DNN1_options['pretrained']):
+            self.DNN.eval()
             self.DNN.load_state_dict(DNN1_options['model_params'])
+        else:
+            self.DNN.train()
 
         self.input_dim=int(DNN2_options['input_dim'])
         self.fc_lay=DNN2_options['fc_lay']
@@ -368,16 +371,19 @@ class SincWrapper(nn.Module):
 
 
 
+
 class MLP(nn.Module):
     def __init__(self, DNN_options, CNN_options):
         super(MLP, self).__init__()
         
         self.CNN = SincNet(CNN_options)
         self.CNN.cuda()
-        self.CNN.eval()
-        if(CNN_options['pretrained']):
-            self.CNN.load_state_dict(CNN_options['model_params'])
 
+        if(CNN_options['pretrained']):
+            self.CNN.eval()
+            self.CNN.load_state_dict(CNN_options['model_params'])
+        else:
+            self.CNN.train()
         self.input_dim=self.CNN.out_dim    # changed from DNN_options['input_dim'] to cnn output dim
         self.fc_lay=DNN_options['fc_lay']
         self.fc_drop=DNN_options['fc_drop']
@@ -473,8 +479,7 @@ class MLP(nn.Module):
            x = self.drop[i](self.wx[i](x)) 
           
       return x
-
-
+    
 class SincNet(nn.Module):
     def __init__(self,options):
        super(SincNet,self).__init__()
@@ -573,7 +578,4 @@ class SincNet(nn.Module):
        x = x.view(batch,-1)
 
        return x
-   
-
-    
    
