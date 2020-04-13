@@ -4,6 +4,8 @@ import numpy as np
 #import scipy.io.wavfile
 import torch
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 def ReadList(list_file):
  f=open(list_file,"r")
  lines=f.readlines()
@@ -111,8 +113,8 @@ def create_batches_rnd(batch_size,data_folder,wav_lst,N_snt,wlen,lab_dict,fact_a
   sig_batch[i,:]=signal[snt_beg:snt_end]*rand_amp_arr[i]
   lab_batch[i]=lab_dict[wav_lst[snt_id_arr[i]]]
   
- inp=torch.from_numpy(sig_batch).float().cuda().contiguous()  # Current Frame
- lab=torch.from_numpy(lab_batch).float().cuda().contiguous()
+ inp=torch.from_numpy(sig_batch).float().to(device).contiguous()  # Current Frame
+ lab=torch.from_numpy(lab_batch).float().to(device).contiguous()
   
  return inp,lab  
 
